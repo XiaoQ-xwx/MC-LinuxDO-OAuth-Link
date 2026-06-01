@@ -68,6 +68,7 @@ public class LinuxDoOAuthClient {
                 .timeout(REQUEST_TIMEOUT)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
+                .header("User-Agent", "OAuth-Framework/1.0 (Minecraft)")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
@@ -101,6 +102,7 @@ public class LinuxDoOAuthClient {
                 .timeout(REQUEST_TIMEOUT)
                 .header("Authorization", "Bearer " + accessToken)
                 .header("Accept", "application/json")
+                .header("User-Agent", "OAuth-Framework/1.0 (Minecraft)")
                 .GET()
                 .build();
 
@@ -112,11 +114,14 @@ public class LinuxDoOAuthClient {
                                 "获取用户信息失败 (HTTP " + response.statusCode() + ")");
                     }
                     try {
-                        JsonNode json = objectMapper.readTree(response.body());
+                        String rawJson = response.body();
+                        JsonNode json = objectMapper.readTree(rawJson);
                         String id = json.has("id") ? String.valueOf(json.get("id").asLong()) : "";
                         String username = json.has("username") ? json.get("username").asText() : "";
                         String displayName = json.has("name") ? json.get("name").asText(username) : username;
-                        return new LinuxDoProfile(id, username, displayName);
+                        int trustLevel = json.has("trust_level") ? json.get("trust_level").asInt(-1) : -1;
+                        int likesReceived = json.has("likes_received") ? json.get("likes_received").asInt(-1) : -1;
+                        return new LinuxDoProfile(id, username, displayName, trustLevel, likesReceived, rawJson);
                     } catch (Exception e) {
                         logger.log(Level.WARNING, "用户信息解析失败", e);
                         throw new OAuthException(OAuthError.USERINFO_FAILED,

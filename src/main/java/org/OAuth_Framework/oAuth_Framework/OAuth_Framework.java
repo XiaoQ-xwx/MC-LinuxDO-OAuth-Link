@@ -57,6 +57,7 @@ public final class OAuth_Framework extends JavaPlugin {
 
             this.httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(30))
+                    .version(java.net.http.HttpClient.Version.HTTP_1_1)
                     .build();
 
             this.objectMapper = new ObjectMapper();
@@ -83,22 +84,26 @@ public final class OAuth_Framework extends JavaPlugin {
             LinuxDoOAuthClient oauthClient = new LinuxDoOAuthClient(
                     httpClient, objectMapper, config, logger);
 
+            // 4. Create service (needed by callback handler for auto-bind)
+            this.service = new OAuthFrameworkService(
+                    this, config, repository, registry, oauthClient,
+                    null, clock, logger); // callbackServer set after creation
+
             OAuthCallbackHandler callbackHandler = new OAuthCallbackHandler(
-                    registry, oauthClient, logger);
+                    registry, oauthClient,
+                    service::onAutoBind, // <-- auto-bind callback
+                    logger);
 
             CallbackHttpServer callbackServer = new CallbackHttpServer(
                     config, callbackHandler, logger);
 
-            // 4. Create service
-            this.service = new OAuthFrameworkService(
-                    this, config, repository, registry, oauthClient,
-                    callbackServer, clock, logger);
+            service.setCallbackServer(callbackServer);
 
             // 5. Initialize service (loads data, starts callback server, registers API)
             service.onEnable();
 
             // 6. Register commands
-            Objects.requireNonNull(getCommand("link"))
+            Objects.requireNonNull(getCommand("linkld"))
                     .setExecutor(new LinkCommand(service, logger));
             Objects.requireNonNull(getCommand("oauthframework"))
                     .setExecutor(new OAuthFrameworkCommand(this, service, logger));

@@ -4,7 +4,7 @@ import java.time.Clock;
 import java.time.Instant;
 
 /**
- * Temporary callback result consumed by /link &lt;code&gt;.
+ * Temporary callback result consumed by /linkLD &lt;code&gt;.
  * Created by the callback handler, consumed by the link command.
  */
 public record PendingAuthorization(

@@ -56,6 +56,10 @@ public class YamlLinkRepository implements LinkRepository {
                         String playerName = accountsSection.getString(key + ".player-name", "");
                         String linuxDoId = accountsSection.getString(key + ".linuxdo-id", "");
                         String linuxDoUsername = accountsSection.getString(key + ".linuxdo-username", "");
+                        String linuxDoDisplayName = accountsSection.getString(key + ".linuxdo-display-name", linuxDoUsername);
+                        int trustLevel = accountsSection.getInt(key + ".trust-level", LinkedAccount.UNKNOWN);
+                        int likesReceived = accountsSection.getInt(key + ".likes-received", LinkedAccount.UNKNOWN);
+                        String rawProfileJson = accountsSection.getString(key + ".raw-profile-json", "");
                         long linkedAtEpoch = accountsSection.getLong(key + ".linked-at", 0);
                         long tokenExpiresAtEpoch = accountsSection.getLong(key + ".token-expires-at", 0);
 
@@ -63,6 +67,8 @@ public class YamlLinkRepository implements LinkRepository {
 
                         LinkedAccount account = new LinkedAccount(
                                 playerId, playerName, linuxDoId, linuxDoUsername,
+                                linuxDoDisplayName, trustLevel, likesReceived,
+                                rawProfileJson,
                                 Instant.ofEpochSecond(linkedAtEpoch),
                                 Instant.ofEpochSecond(tokenExpiresAtEpoch));
 
@@ -124,6 +130,10 @@ public class YamlLinkRepository implements LinkRepository {
                     yaml.set(key + ".player-name", account.playerName());
                     yaml.set(key + ".linuxdo-id", account.linuxDoId());
                     yaml.set(key + ".linuxdo-username", account.linuxDoUsername());
+                    yaml.set(key + ".linuxdo-display-name", account.linuxDoDisplayName());
+                    yaml.set(key + ".trust-level", account.trustLevel());
+                    yaml.set(key + ".likes-received", account.likesReceived());
+                    yaml.set(key + ".raw-profile-json", account.rawProfileJson());
                     yaml.set(key + ".linked-at", account.linkedAt().getEpochSecond());
                     yaml.set(key + ".token-expires-at", account.tokenExpiresAt().getEpochSecond());
                 }

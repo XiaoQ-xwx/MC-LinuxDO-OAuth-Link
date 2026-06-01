@@ -8,6 +8,7 @@ import org.OAuth_Framework.oAuth_Framework.util.OAuthCodeGenerator;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -17,7 +18,14 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class PendingOAuthRegistry {
 
-    private final ConcurrentMap<String, Instant> states;
+    /** State record — stores player info alongside the CSRF state value */
+    public record StateEntry(UUID playerId, String playerName, Instant expiresAt) {
+        public boolean isExpired(Clock clock) {
+            return Instant.now(clock).isAfter(expiresAt);
+        }
+    }
+
+    private final ConcurrentMap<String, StateEntry> states;
     private final ConcurrentMap<String, PendingAuthorization> authorizations;
     private final OAuthCodeGenerator generator;
     private final Clock clock;
@@ -35,32 +43,37 @@ public class PendingOAuthRegistry {
     }
 
     /**
-     * Generates a new state value and stores it with a TTL.
+     * Generates a new state value, storing the player's identity alongside it.
      * Returns the state string for use in the authorization URL.
      */
-    public String createState() {
+    public String createState(UUID playerId, String playerName) {
         purgeExpired();
         String state = generator.generateState();
-        states.put(state, Instant.now(clock).plus(stateTtl));
+        StateEntry entry = new StateEntry(playerId, playerName, Instant.now(clock).plus(stateTtl));
+        states.put(state, entry);
         return state;
     }
 
     /**
-     * Validates a state value exists and has not expired.
-     * Consumes the state (removes it) on success.
-     * Returns true if the state was valid.
+     * Validates and consumes a state value.
+     * Returns the associated StateEntry (playerId + playerName) on success, null if invalid/expired.
      */
-    public boolean validateAndConsumeState(String state) {
-        Instant expiresAt = states.remove(state);
-        if (expiresAt == null) {
-            return false;
+    public StateEntry consumeState(String state) {
+        StateEntry entry = states.remove(state);
+        if (entry == null) {
+            return null;
         }
-        return !Instant.now(clock).isAfter(expiresAt);
+        if (entry.isExpired(clock)) {
+            return null;
+        }
+        return entry;
     }
+
+    // === Manual mode fallback (link code) ===
 
     /**
      * Stores a completed authorization result and returns a link code
-     * for the player to use in-game.
+     * for manual mode /linkLD &lt;code&gt;.
      */
     public String storeAuthorization(LinuxDoProfile profile, OAuthTokens tokens) {
         purgeExpired();
@@ -73,7 +86,7 @@ public class PendingOAuthRegistry {
     }
 
     /**
-     * Consumes a link code and returns the pending authorization.
+     * Consumes a manual link code and returns the pending authorization.
      * Returns null if the code is invalid or expired.
      */
     public PendingAuthorization consumeCode(String code) {
@@ -89,11 +102,10 @@ public class PendingOAuthRegistry {
 
     /**
      * Removes all expired entries from both maps.
-     * Called automatically by createState and storeAuthorization.
      */
     public void purgeExpired() {
         Instant now = Instant.now(clock);
-        states.entrySet().removeIf(entry -> now.isAfter(entry.getValue()));
+        states.entrySet().removeIf(entry -> entry.getValue().isExpired(clock));
         authorizations.entrySet().removeIf(entry -> entry.getValue().isExpired(clock));
     }
 }

@@ -1,5 +1,5 @@
 name: OAuth_Framework
-description: $description
+description: LinuxDO OAuth Framework
 version: '${version}'
 
 main: org.OAuth_Framework.oAuth_Framework.OAuth_Framework
@@ -9,9 +9,10 @@ authors: [ XiaoQ ]
 website: https://linux.do/u/xiao_q/summary
 
 commands:
-  link:
+  linkld:
     description: Start or complete LinuxDO OAuth account linking
-    usage: /<command> [code]
+    usage: /<command> [code|unlink]
+    aliases: [link]
     permission: oauth_framework.command.link
   oauthframework:
     description: OAuth Framework administration
