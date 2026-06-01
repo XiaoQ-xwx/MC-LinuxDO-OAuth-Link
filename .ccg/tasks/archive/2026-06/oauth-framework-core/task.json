@@ -1,0 +1,12 @@
+{
+  "id": "oauth-framework-core",
+  "title": "开发 Minecraft LinuxDO OAuth 认证框架插件，为其他登录插件提供 OAuth 用户信息",
+  "status": "completed",
+  "strategy": "full-collaborate",
+  "currentPhase": "6-final",
+  "nextAction": "归档任务，建议用户提交代码",
+  "gate": null,
+  "branch": "master",
+  "scope": "oauth-framework-core",
+  "createdAt": "2026-06-01T12:00:00+08:00"
+}

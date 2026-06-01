@@ -1,0 +1,5 @@
+{"file": ".ccg/tasks/oauth-framework-core/requirements.md", "reason": "Confirmed requirements with architecture decisions"}
+{"file": ".ccg/tasks/oauth-framework-core/analysis.md", "reason": "Dual-model synthesis: Codex backend architecture + Gemini UX/API design"}
+{"file": "build.gradle.kts", "reason": "Build configuration - Gradle Kotlin DSL with Spigot API dependency"}
+{"file": "src/main/resources/plugin.yml", "reason": "Plugin metadata - needs command declarations"}
+{"file": "src/main/java/org/OAuth_Framework/oAuth_Framework/OAuth_Framework.java", "reason": "Plugin entry point - current skeleton"}
