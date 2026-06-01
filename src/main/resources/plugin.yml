@@ -1,0 +1,28 @@
+name: OAuth_Framework
+description: $description
+version: '${version}'
+
+main: org.OAuth_Framework.oAuth_Framework.OAuth_Framework
+api-version: '1.20'
+
+authors: [ XiaoQ ]
+website: https://linux.do/u/xiao_q/summary
+
+commands:
+  link:
+    description: Start or complete LinuxDO OAuth account linking
+    usage: /<command> [code]
+    permission: oauth_framework.command.link
+  oauthframework:
+    description: OAuth Framework administration
+    usage: /<command> reload
+    aliases: [oauthfw]
+    permission: oauth_framework.admin
+
+permissions:
+  oauth_framework.command.link:
+    description: Allows linking Minecraft account with LinuxDO OAuth
+    default: true
+  oauth_framework.admin:
+    description: Allows OAuth Framework administrative commands
+    default: op

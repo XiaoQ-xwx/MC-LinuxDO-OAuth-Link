@@ -1,0 +1,22 @@
+# LinuxDO OAuth Configuration
+# Register your application at: https://connect.linux.do/
+oauth:
+  client-id: ""
+  client-secret: ""
+  authorization-url: "https://connect.linux.do/oauth2/authorize"
+  token-url: "https://connect.linux.do/oauth2/token"
+  user-info-url: "https://connect.linux.do/api/user"
+  redirect-uri: "http://127.0.0.1:8181/oauth/callback"
+
+callback:
+  host: "127.0.0.1"
+  port: 8181
+  path: "/oauth/callback"
+
+security:
+  state-ttl-seconds: 300
+  link-code-ttl-seconds: 300
+  token-expiry-skew-seconds: 60
+
+storage:
+  file: "data.yml"
