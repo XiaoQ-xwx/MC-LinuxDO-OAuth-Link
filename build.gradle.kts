@@ -38,7 +38,7 @@ tasks {
     }
 
     shadowJar {
-        relocate("com.fasterxml.jackson", "org.OAuth_Framework.oAuth_Framework.libs.jackson")
+        relocate("com.fasterxml.jackson", "org.linuxdo.oauthlink.libs.jackson")
         archiveClassifier.set("")
     }
 

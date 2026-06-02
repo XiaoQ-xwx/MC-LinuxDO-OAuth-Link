@@ -1,1 +1,1 @@
-rootProject.name = "OAuth_Framework"
+rootProject.name = "MC-LinuxDO-OAuth-Link"
