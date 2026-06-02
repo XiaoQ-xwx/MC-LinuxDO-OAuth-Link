@@ -30,9 +30,9 @@ public final class OAuthConfig {
         this.authorizationUrl = config.getString("oauth.authorization-url", "https://connect.linux.do/oauth2/authorize");
         this.tokenUrl = config.getString("oauth.token-url", "https://connect.linux.do/oauth2/token");
         this.userInfoUrl = config.getString("oauth.user-info-url", "https://connect.linux.do/api/user");
-        this.redirectUri = config.getString("oauth.redirect-uri", "http://127.0.0.1:8181/oauth/callback");
+        this.redirectUri = config.getString("oauth.redirect-uri", "http://127.0.0.1:2790/oauth/callback");
         this.callbackHost = config.getString("callback.host", "127.0.0.1");
-        this.callbackPort = config.getInt("callback.port", 8181);
+        this.callbackPort = config.getInt("callback.port", 2790);
         this.callbackPath = config.getString("callback.path", "/oauth/callback");
         this.stateTtlSeconds = config.getInt("security.state-ttl-seconds", 300);
         this.linkCodeTtlSeconds = config.getInt("security.link-code-ttl-seconds", 300);

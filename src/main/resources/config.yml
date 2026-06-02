@@ -1,22 +1,48 @@
-# LinuxDO OAuth Configuration
-# Register your application at: https://connect.linux.do/
-oauth:
-  client-id: ""
-  client-secret: ""
-  authorization-url: "https://connect.linux.do/oauth2/authorize"
-  token-url: "https://connect.linux.do/oauth2/token"
-  user-info-url: "https://connect.linux.do/api/user"
-  redirect-uri: "http://127.0.0.1:8181/oauth/callback"
+# ============================================================================
+# LinuxDO OAuth Framework — 配置文件
+# ============================================================================
+# OAuth 应用注册: https://connect.linux.do/
+# 修改配置后使用 /oauthfw reload 重载生效
+# ============================================================================
 
+# ── OAuth2 认证 ────────────────────────────────────────────────────────────
+oauth:
+  # [必填] LinuxDO Connect 应用 ID
+  client-id: ""
+  # [必填] LinuxDO Connect 应用密钥（敏感信息，勿泄露）
+  client-secret: ""
+  # LinuxDO OAuth2 授权端点
+  authorization-url: "https://connect.linux.do/oauth2/authorize"
+  # Token 交换端点
+  token-url: "https://connect.linux.do/oauth2/token"
+  # 用户信息 API 端点
+  user-info-url: "https://connect.linux.do/api/user"
+  # OAuth 回调地址，必须与 LinuxDO Connect 后台注册的一致
+  # 本地开发:   http://127.0.0.1:2790/oauth/callback  (host=127.0.0.1)
+  # 局域网:     http://192.168.x.x:2790/oauth/callback  (host=0.0.0.0)
+  # 公网 IP:    http://公网IP:2790/oauth/callback       (host=0.0.0.0)
+  # 公网域名:   https://你的域名/oauth/callback          (host=0.0.0.0, 推荐反代)
+  redirect-uri: "http://127.0.0.1:2790/oauth/callback"
+
+# ── 回调 HTTP 服务器 ──────────────────────────────────────────────────────
 callback:
+  # 监听地址: 127.0.0.1=仅本机, 0.0.0.0=所有网卡
   host: "127.0.0.1"
-  port: 8181
+  # 监听端口 (1-65535)
+  port: 2790
+  # 回调路径，需与 redirect-uri 路径段一致
   path: "/oauth/callback"
 
+# ── 安全设置 ──────────────────────────────────────────────────────────────
 security:
+  # OAuth state 参数有效期，超时需重新发起授权（秒，最低 30）
   state-ttl-seconds: 300
+  # 手动验证码有效期（秒，最低 30）
   link-code-ttl-seconds: 300
+  # Token 过期时间容忍偏差，用于容忍服务器时钟不同步（秒）
   token-expiry-skew-seconds: 60
 
+# ── 持久化存储 ────────────────────────────────────────────────────────────
 storage:
+  # 绑定数据存储文件名（位于 plugins/OAuth_Framework/ 目录下）
   file: "data.yml"
