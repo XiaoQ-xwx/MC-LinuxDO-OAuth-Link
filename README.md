@@ -1,4 +1,4 @@
-# LinuxDO OAuth Framework
+# MC-LinuxDO-OAuth-Link
 
 [![Java 17](https://img.shields.io/badge/Java-17-blue)](https://adoptium.net/)
 [![Spigot 1.20](https://img.shields.io/badge/Spigot-1.20.x-orange)](https://www.spigotmc.org/)
@@ -13,7 +13,7 @@ Minecraft (Spigot/Paper) 插件 — 将 [LinuxDO](https://linux.do/) 社区 OAut
 - **自动绑定 + 手动降级** — 浏览器授权成功后自动完成绑定，验证码手动输入作为备用路径
 - **账号信息面板** — `/linkld` 查看已绑定账号的信任等级、社区分数、论坛主页
 - **Bukkit 事件系统** — 绑定成功/失败/解绑分别触发事件，下游插件可监听
-- **静态 API 门面** — `OAuthFrameworkAPI` 一行调用查询绑定状态，无需注入依赖
+- **静态 API 门面** — `OAuthLinkAPI` 一行调用查询绑定状态，无需注入依赖
 - **安全的 Token 管理** — Access Token 永不通过公共 API 暴露，仅插件内部使用
 - **YAML 持久化** — 使用 Minecraft 原生 `YamlConfiguration`，人类可读、易于排查
 
@@ -36,11 +36,11 @@ Minecraft (Spigot/Paper) 插件 — 将 [LinuxDO](https://linux.do/) 社区 OAut
 
 ### 2. 安装插件
 
-将 `OAuth_Framework.jar` 放入服务器的 `plugins/` 目录，启动服务器。
+将 `OAuthLink.jar` 放入服务器的 `plugins/` 目录，启动服务器。
 
 ### 3. 配置
 
-编辑 `plugins/OAuth_Framework/config.yml`，填入注册应用时获得的凭据：
+编辑 `plugins/OAuthLink/config.yml`，填入注册应用时获得的凭据：
 
 ```yaml
 oauth:
@@ -48,7 +48,7 @@ oauth:
   client-secret: "你的-client-secret"
 ```
 
-然后使用 `/oauthfw reload` 重载配置。
+然后使用 `/oauthlink reload` 重载配置。
 
 ### 4. 玩家绑定
 
@@ -61,14 +61,12 @@ oauth:
 
 | 命令 | 权限 | 说明 |
 | :--- | :--- | :--- |
-| `/linkld` | `oauth_framework.command.link`（默认所有人） | 发起 LinuxDO 账号绑定，已绑定则显示账号信息面板 |
+| `/linkld` | `oauthlink.command.link`（默认所有人） | 发起 LinuxDO 账号绑定，已绑定则显示账号信息面板 |
 | `/linkld <验证码>` | 同上 | 输入授权回调页面显示的验证码完成绑定 |
 | `/linkld unlink` | 同上 | 显示解除绑定确认提示 |
 | `/linkld unlink confirm` | 同上 | 执行解除绑定 |
-| `/oauthfw reload` | `oauth_framework.admin`（默认 OP） | 重新加载配置文件 |
-| `/oauthframework` | 同上 | `oauthfw` 的全名别名 |
-
-> `/link` 仍作为 `/linkld` 的别名可用，避免命令冲突。
+| `/oauthlink reload` | `oauthlink.admin`（默认 OP） | 重新加载配置文件 |
+| `/oauthlink` | 同上 | `olink` 的全名别名 |
 
 ## 🔧 配置参考
 
@@ -113,16 +111,16 @@ storage:
 
 ```kotlin
 dependencies {
-    compileOnly(files("libs/OAuth_Framework.jar"))
+    compileOnly(files("libs/OAuthLink.jar"))
 }
 ```
 
 **一行检查绑定：**
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.api.OAuthFrameworkAPI;
+import org.linuxdo.oauthlink.api.OAuthLinkAPI;
 
-if (OAuthFrameworkAPI.isLinked(player.getUniqueId())) {
+if (OAuthLinkAPI.isLinked(player.getUniqueId())) {
     // 玩家已绑定 LinuxDO 账号
 }
 ```
@@ -130,9 +128,9 @@ if (OAuthFrameworkAPI.isLinked(player.getUniqueId())) {
 **监听绑定事件：**
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.event.PlayerOAuthSuccessEvent;
-import org.OAuth_Framework.oAuth_Framework.event.PlayerOAuthUnlinkEvent;
-import org.OAuth_Framework.oAuth_Framework.model.LinkedAccount;
+import org.linuxdo.oauthlink.event.PlayerOAuthSuccessEvent;
+import org.linuxdo.oauthlink.event.PlayerOAuthUnlinkEvent;
+import org.linuxdo.oauthlink.model.LinkedAccount;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -168,7 +166,7 @@ gradlew.bat build
 ./gradlew build
 ```
 
-产物：`build/libs/OAuth_Framework-1.0-SNAPSHOT.jar`（shadowJar，含 relocated Jackson）
+产物：`build/libs/MC-LinuxDO-OAuth-Link-1.0-SNAPSHOT.jar`（shadowJar，含 relocated Jackson）
 
 ### 运行测试
 
@@ -184,14 +182,14 @@ gradlew.bat build
 ┌─────────────────────────────────────────────────────────┐
 │                   Minecraft Server                       │
 │  ┌──────────┐  ┌──────────┐  ┌───────────────────────┐ │
-│  │ /linkld  │  │ /oauthfw │  │  Downstream Plugins   │ │
+│  │ /linkld  │  │ /oauthlink │  │  Downstream Plugins   │ │
 │  │ Command  │  │ Command  │  │  (Events / API)       │ │
 │  └────┬─────┘  └────┬─────┘  └──────────┬────────────┘ │
 │       │             │                   │               │
 │       ▼             ▼                   ▼               │
 │  ┌────────────────────────────────────────────────────┐  │
-│  │           OAuthFrameworkService                    │  │
-│  │  (Business Orchestrator + OAuthFrameworkProvider)  │  │
+│  │           OAuthLinkService                    │  │
+│  │  (Business Orchestrator + OAuthLinkProvider)  │  │
 │  └──┬───────┬────────┬────────┬────────┬─────────────┘  │
 │     │       │        │        │        │                 │
 │     ▼       ▼        ▼        ▼        ▼                 │
@@ -213,13 +211,13 @@ gradlew.bat build
 
 | 包 | 职责 | 关键类 |
 | :--- | :--- | :--- |
-| `oAuth_Framework` | 插件入口，生命周期管理 | `OAuth_Framework.java` |
-| `api` | 公共 API（静态门面 + 服务接口） | `OAuthFrameworkAPI`, `OAuthFrameworkProvider` |
-| `service` | 核心业务编排 | `OAuthFrameworkService` |
+| `oauthlink` | 插件入口，生命周期管理 | `OAuthLink.java` |
+| `api` | 公共 API（静态门面 + 服务接口） | `OAuthLinkAPI`, `OAuthLinkProvider` |
+| `service` | 核心业务编排 | `OAuthLinkService` |
 | `oauth` | OAuth2 客户端、状态注册表、错误体系 | `LinuxDoOAuthClient`, `PendingOAuthRegistry`, `OAuthError` |
 | `http` | 内建 HTTP 回调服务器 | `CallbackHttpServer`, `OAuthCallbackHandler` |
 | `storage` | 账号绑定持久化（接口 + YAML 实现） | `LinkRepository`, `YamlLinkRepository` |
-| `command` | 游戏内命令 | `LinkCommand`, `OAuthFrameworkCommand` |
+| `command` | 游戏内命令 | `LinkCommand`, `OAuthLinkCommand` |
 | `event` | Bukkit 事件 | `PlayerOAuthSuccessEvent`, `PlayerOAuthFailEvent`, `PlayerOAuthUnlinkEvent` |
 | `config` | 配置加载与校验 | `OAuthConfig` |
 | `model` | 数据记录（DTO） | `LinkedAccount`, `LinuxDoProfile`, `OAuthTokens`, `PendingAuthorization` |

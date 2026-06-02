@@ -6,13 +6,13 @@
 
 ## Maven / Gradle 依赖
 
-将 `OAuth_Framework.jar` 作为编译依赖引入：
+将 `OAuthLink.jar` 作为编译依赖引入：
 
 **Gradle (build.gradle.kts):**
 
 ```kotlin
 dependencies {
-    compileOnly(files("libs/OAuth_Framework.jar"))
+    compileOnly(files("libs/OAuthLink.jar"))
 }
 ```
 
@@ -20,11 +20,11 @@ dependencies {
 
 ```xml
 <dependency>
-    <groupId>org.OAuth_Framework</groupId>
-    <artifactId>OAuth_Framework</artifactId>
+    <groupId>org.OAuthLink</groupId>
+    <artifactId>OAuthLink</artifactId>
     <version>1.0-SNAPSHOT</version>
     <scope>provided</scope>
-    <systemPath>${project.basedir}/libs/OAuth_Framework.jar</systemPath>
+    <systemPath>${project.basedir}/libs/OAuthLink.jar</systemPath>
 </dependency>
 ```
 
@@ -35,7 +35,7 @@ dependencies {
 ### PlayerOAuthSuccessEvent — 绑定成功
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.event.PlayerOAuthSuccessEvent;
+import org.linuxdo.oauthlink.event.PlayerOAuthSuccessEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
@@ -65,7 +65,7 @@ public class MyListener implements Listener {
 ### PlayerOAuthFailEvent — 绑定失败
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.event.PlayerOAuthFailEvent;
+import org.linuxdo.oauthlink.event.PlayerOAuthFailEvent;
 
 @EventHandler
 public void onOAuthFail(PlayerOAuthFailEvent event) {
@@ -85,7 +85,7 @@ public void onOAuthFail(PlayerOAuthFailEvent event) {
 ### PlayerOAuthUnlinkEvent — 解除绑定
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.event.PlayerOAuthUnlinkEvent;
+import org.linuxdo.oauthlink.event.PlayerOAuthUnlinkEvent;
 
 @EventHandler
 public void onOAuthUnlink(PlayerOAuthUnlinkEvent event) {
@@ -104,15 +104,15 @@ public void onOAuthUnlink(PlayerOAuthUnlinkEvent event) {
 ## 静态 API 查询
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.api.OAuthFrameworkAPI;
-import org.OAuth_Framework.oAuth_Framework.model.LinkedAccount;
+import org.linuxdo.oauthlink.api.OAuthLinkAPI;
+import org.linuxdo.oauthlink.model.LinkedAccount;
 
 import java.util.Optional;
 
 // 检查是否已绑定
-if (OAuthFrameworkAPI.isLinked(player.getUniqueId())) {
+if (OAuthLinkAPI.isLinked(player.getUniqueId())) {
     // 获取完整绑定信息
-    Optional<LinkedAccount> opt = OAuthFrameworkAPI.getLinkedAccount(player.getUniqueId());
+    Optional<LinkedAccount> opt = OAuthLinkAPI.getLinkedAccount(player.getUniqueId());
     opt.ifPresent(account -> {
         // 基础信息
         String linuxDoId = account.linuxDoId();
@@ -139,7 +139,7 @@ if (OAuthFrameworkAPI.isLinked(player.getUniqueId())) {
 }
 
 // 解除绑定（异步操作）
-OAuthFrameworkAPI.unlink(player.getUniqueId())
+OAuthLinkAPI.unlink(player.getUniqueId())
     .thenAccept(v -> player.sendMessage("已解除绑定"))
     .exceptionally(ex -> {
         player.sendMessage("解除绑定失败");
@@ -175,10 +175,10 @@ OAuthFrameworkAPI.unlink(player.getUniqueId())
 ## Bukkit ServicesManager（备选）
 
 ```java
-import org.OAuth_Framework.oAuth_Framework.api.OAuthFrameworkProvider;
+import org.linuxdo.oauthlink.api.OAuthLinkProvider;
 
-OAuthFrameworkProvider provider = Bukkit.getServicesManager()
-    .load(OAuthFrameworkProvider.class);
+OAuthLinkProvider provider = Bukkit.getServicesManager()
+    .load(OAuthLinkProvider.class);
 if (provider != null) {
     boolean linked = provider.isLinked(playerId);
     Optional<LinkedAccount> account = provider.getLinkedAccount(playerId);
@@ -194,7 +194,7 @@ if (provider != null) {
 @EventHandler
 public void onPlayerJoin(PlayerJoinEvent event) {
     Player player = event.getPlayer();
-    OAuthFrameworkAPI.getLinkedAccount(player.getUniqueId())
+    OAuthLinkAPI.getLinkedAccount(player.getUniqueId())
         .ifPresent(account -> {
             // TL3+ 获得特殊权限
             if (account.trustLevel() >= 3) {
@@ -210,7 +210,7 @@ public void onPlayerJoin(PlayerJoinEvent event) {
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-OAuthFrameworkAPI.getLinkedAccount(playerId).ifPresent(account -> {
+OAuthLinkAPI.getLinkedAccount(playerId).ifPresent(account -> {
     try {
         JsonNode json = new ObjectMapper().readTree(account.rawProfileJson());
         // 获取 LinuxDO 徽章数量

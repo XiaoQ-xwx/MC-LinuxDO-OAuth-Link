@@ -1,6 +1,6 @@
-# LinuxDO OAuth Framework
+# MC-LinuxDO-OAuth-Link
 
-> Minecraft (Spigot/Paper) 插件 -- 集成 LinuxDO 社区 OAuth 认证框架。
+> Minecraft (Spigot/Paper) 插件 -- LinuxDO 社区 OAuth 账号绑定。
 
 ## 项目愿景
 
@@ -12,14 +12,14 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                     Minecraft Server                        │
 │  ┌──────────┐  ┌──────────┐  ┌───────────────────────────┐ │
-│  │ /linkld  │  │ /oauthfw │  │ Downstream Plugins        │ │
+│  │ /linkld  │  │ /oauthlink │  │ Downstream Plugins        │ │
 │  │ Command  │  │ Command  │  │ (listen to Events / API)  │ │
 │  └────┬─────┘  └────┬─────┘  └──────────┬────────────────┘ │
 │       │             │                   │                   │
 │       ▼             ▼                   ▼                   │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │            OAuthFrameworkService                     │  │
-│  │  (Business Orchestrator + OAuthFrameworkProvider)    │  │
+│  │            OAuthLinkService                     │  │
+│  │  (Business Orchestrator + OAuthLinkProvider)    │  │
 │  └──┬───────┬────────┬────────┬────────┬───────────────┘  │
 │     │       │        │        │        │                   │
 │     ▼       ▼        ▼        ▼        ▼                   │
@@ -61,11 +61,11 @@
 
 ```mermaid
 graph TD
-    A["OAuth_Framework<br/>Plugin 主类"] --> B["api<br/>公共 API 层"]
+    A["OAuthLink<br/>Plugin 主类"] --> B["api<br/>公共 API 层"]
     A --> C["service<br/>业务编排层"]
     A --> D["command<br/>游戏命令"]
-    B --> E["OAuthFrameworkAPI<br/>静态门面"]
-    B --> F["OAuthFrameworkProvider<br/>服务接口"]
+    B --> E["OAuthLinkAPI<br/>静态门面"]
+    B --> F["OAuthLinkProvider<br/>服务接口"]
     C --> G["oauth<br/>OAuth2 客户端"]
     C --> H["http<br/>回调 HTTP 服务器"]
     C --> I["storage<br/>持久化存储"]
@@ -83,29 +83,29 @@ graph TD
     A --> U["model<br/>数据模型"]
     A --> V["util<br/>工具类"]
 
-    click B "./src/main/java/org/OAuth_Framework/oAuth_Framework/api/CLAUDE.md" "查看 api 模块文档"
-    click C "./src/main/java/org/OAuth_Framework/oAuth_Framework/service/CLAUDE.md" "查看 service 模块文档"
-    click D "./src/main/java/org/OAuth_Framework/oAuth_Framework/command/CLAUDE.md" "查看 command 模块文档"
-    click G "./src/main/java/org/OAuth_Framework/oAuth_Framework/oauth/CLAUDE.md" "查看 oauth 模块文档"
-    click H "./src/main/java/org/OAuth_Framework/oAuth_Framework/http/CLAUDE.md" "查看 http 模块文档"
-    click I "./src/main/java/org/OAuth_Framework/oAuth_Framework/storage/CLAUDE.md" "查看 storage 模块文档"
-    click J "./src/main/java/org/OAuth_Framework/oAuth_Framework/event/CLAUDE.md" "查看 event 模块文档"
-    click T "./src/main/java/org/OAuth_Framework/oAuth_Framework/config/CLAUDE.md" "查看 config 模块文档"
-    click U "./src/main/java/org/OAuth_Framework/oAuth_Framework/model/CLAUDE.md" "查看 model 模块文档"
-    click V "./src/main/java/org/OAuth_Framework/oAuth_Framework/util/CLAUDE.md" "查看 util 模块文档"
+    click B "./src/main/java/org/linuxdo/oauthlink/api/CLAUDE.md" "查看 api 模块文档"
+    click C "./src/main/java/org/linuxdo/oauthlink/service/CLAUDE.md" "查看 service 模块文档"
+    click D "./src/main/java/org/linuxdo/oauthlink/command/CLAUDE.md" "查看 command 模块文档"
+    click G "./src/main/java/org/linuxdo/oauthlink/oauth/CLAUDE.md" "查看 oauth 模块文档"
+    click H "./src/main/java/org/linuxdo/oauthlink/http/CLAUDE.md" "查看 http 模块文档"
+    click I "./src/main/java/org/linuxdo/oauthlink/storage/CLAUDE.md" "查看 storage 模块文档"
+    click J "./src/main/java/org/linuxdo/oauthlink/event/CLAUDE.md" "查看 event 模块文档"
+    click T "./src/main/java/org/linuxdo/oauthlink/config/CLAUDE.md" "查看 config 模块文档"
+    click U "./src/main/java/org/linuxdo/oauthlink/model/CLAUDE.md" "查看 model 模块文档"
+    click V "./src/main/java/org/linuxdo/oauthlink/util/CLAUDE.md" "查看 util 模块文档"
 ```
 
 ## 模块索引
 
 | 包路径 | 职责 | 关键文件 |
 | :--- | :--- | :--- |
-| `OAuth_Framework` | 插件入口，生命周期管理，依赖注入组装 | `OAuth_Framework.java` |
-| `api` | 下游插件公共 API（静态门面 + 服务接口） | `OAuthFrameworkAPI.java`, `OAuthFrameworkProvider.java` |
-| `service` | 核心业务编排，实现 OAuthFrameworkProvider，管理绑定/解绑/事件触发 | `OAuthFrameworkService.java` |
+| `oauthlink` | 插件入口，生命周期管理，依赖注入组装 | `OAuthLink.java` |
+| `api` | 下游插件公共 API（静态门面 + 服务接口） | `OAuthLinkAPI.java`, `OAuthLinkProvider.java` |
+| `service` | 核心业务编排，实现 OAuthLinkProvider，管理绑定/解绑/事件触发 | `OAuthLinkService.java` |
 | `oauth` | LinuxDO OAuth2 客户端、状态注册表、错误体系 | `LinuxDoOAuthClient.java`, `PendingOAuthRegistry.java`, `OAuthError.java`, `OAuthException.java` |
 | `http` | 内建 HTTP 回调服务器与处理逻辑（自动绑定 + 手动降级） | `CallbackHttpServer.java`, `OAuthCallbackHandler.java` |
 | `storage` | 账号绑定持久化（接口 + YAML 原子写入实现） | `LinkRepository.java`, `YamlLinkRepository.java` |
-| `command` | 游戏内命令（`/linkld` 绑定/解绑/信息, `/oauthfw` 管理） | `LinkCommand.java`, `OAuthFrameworkCommand.java` |
+| `command` | 游戏内命令（`/linkld` 绑定/解绑/信息, `/oauthlink` 管理） | `LinkCommand.java`, `OAuthLinkCommand.java` |
 | `event` | Bukkit 事件（绑定成功/失败/解除绑定） | `PlayerOAuthSuccessEvent.java`, `PlayerOAuthFailEvent.java`, `PlayerOAuthUnlinkEvent.java` |
 | `config` | 配置加载与校验（含 sentinel 值检测） | `OAuthConfig.java` |
 | `model` | 数据记录（DTO），含 rawProfileJson 可扩展字段 | `LinkedAccount.java`, `LinuxDoProfile.java`, `OAuthTokens.java`, `PendingAuthorization.java` |
@@ -129,7 +129,7 @@ gradlew.bat build
 ./gradlew build
 ```
 
-构建产物: `build/libs/OAuth_Framework-1.0-SNAPSHOT.jar`（shadowJar，含 relocated Jackson）
+构建产物: `build/libs/MC-LinuxDO-OAuth-Link-1.0-SNAPSHOT.jar`（shadowJar，含 relocated Jackson）
 
 ### 测试
 
@@ -142,7 +142,7 @@ gradlew.bat build
 ### 配置
 
 1. 前往 [LinuxDO Connect](https://connect.linux.do/) 注册 OAuth 应用
-2. 将 `client-id` 和 `client-secret` 填入 `plugins/OAuth_Framework/config.yml`
+2. 将 `client-id` 和 `client-secret` 填入 `plugins/OAuthLink/config.yml`
 3. 确保回调地址 `redirect-uri` 与注册时一致（默认 `http://127.0.0.1:2790/oauth/callback`）
 
 ### 关键配置项
@@ -185,11 +185,11 @@ storage:
 | `YamlLinkRepositoryTest` | `storage` | 集成测试（TempDir + 并发） |
 
 **未覆盖模块：**
-- `service/OAuthFrameworkService` -- 需 Bukkit Mock 环境
+- `service/OAuthLinkService` -- 需 Bukkit Mock 环境
 - `http/CallbackHttpServer` -- 需真实端口绑定
 - `http/OAuthCallbackHandler` -- 需 HTTP 集成测试框架
 - `command/LinkCommand` -- 需 Bukkit Mock + 玩家模拟
-- `command/OAuthFrameworkCommand` -- 需 Bukkit Mock
+- `command/OAuthLinkCommand` -- 需 Bukkit Mock
 - `oauth/LinuxDoOAuthClient` -- 需 WireMock/HTTP mock
 - `event/*` -- 纯 POJO，低优先级
 
@@ -208,7 +208,7 @@ storage:
 
 - **语言：** Java 17
 - **构建：** Gradle Kotlin DSL
-- **命名：** 包名全小写（`oAuth_Framework`），类名 PascalCase
+- **命名：** 包名全小写（`oauthlink`），类名 PascalCase
 - **数据结构：** 优先使用 `record`（Java 14+）；`LinkedAccount` 含 `rawProfileJson` 供下游解析任意字段
 - **并发：** I/O 操作通过 `ExecutorService` 异步执行；共享状态使用 `ConcurrentHashMap`
 - **错误处理：** 使用类型化 `OAuthException`，包含 `OAuthError` 枚举和玩家安全消息
@@ -218,7 +218,7 @@ storage:
 
 - 修改 HTTP 通信相关代码（`LinuxDoOAuthClient`, `OAuthCallbackHandler`）时，注意异步回调链的异常传播
 - 修改存储层时，确保 `YamlLinkRepository` 的原子写入（temp-file + ATOMIC_MOVE）不被破坏
-- 添加新的公共 API 方法时，同步更新 `OAuthFrameworkAPI` 静态门面和 `OAuthFrameworkProvider` 接口
+- 添加新的公共 API 方法时，同步更新 `OAuthLinkAPI` 静态门面和 `OAuthLinkProvider` 接口
 - 配置项变更需同步更新 `config.yml` 默认值和 `OAuthConfig` 类
 - 新增 Bukkit 事件时，参考 `PlayerOAuthUnlinkEvent` 模式（继承 Event，使用 HandlerList，可选 Cancellable）
 - `LinkedAccount.rawProfileJson()` 存储完整 user-info 响应，下游可从中提取任意字段；修改 `LinuxDoProfile` 解析逻辑时确保不影响已有持久化数据
