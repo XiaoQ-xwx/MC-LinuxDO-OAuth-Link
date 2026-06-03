@@ -6,6 +6,10 @@
 
 Minecraft (Spigot/Paper) 插件 — 将 [LinuxDO](https://linux.do/) 社区 OAuth 认证引入你的服务器。玩家通过浏览器完成 LinuxDO 授权，在游戏内使用 `/linkld` 命令绑定账号，下游插件可通过 Bukkit Event 或静态 API 查询绑定状态。
 
+## 注意
+
+**此项目99%为AI生成**
+
 ## ✨ 功能
 
 - **OAuth2 授权码流程** — 标准 authorization_code 流程，安全绑定 LinuxDO 账号
