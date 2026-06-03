@@ -1,8 +1,0 @@
-{"_example": "Fill with {\"file\": \"path\", \"reason\": \"why\"}. Seed rows are skipped."}
-{"file": "src/main/resources/plugin.yml", "reason": "重命名 link 命令为 linkLD，添加 unlink 子命令权限"}
-{"file": "src/main/java/.../OAuth_Framework.java", "reason": "更新 getCommand 调用从 link 到 linkLD"}
-{"file": "src/main/java/.../command/LinkCommand.java", "reason": "核心变更：添加已绑定玩家信息展示 + 退出登录按钮"}
-{"file": "src/main/java/.../model/LinuxDoProfile.java", "reason": "扩展字段：trustLevel"}
-{"file": "src/main/java/.../model/LinkedAccount.java", "reason": "扩展字段：trustLevel, profileUrl"}
-{"file": "src/main/java/.../oauth/LinuxDoOAuthClient.java", "reason": "fetchProfile 从 user-info 提取 trust_level"}
-{"file": "src/main/java/.../service/OAuthFrameworkService.java", "reason": "更新 LinkedAccount 构造调用以包含新字段"}

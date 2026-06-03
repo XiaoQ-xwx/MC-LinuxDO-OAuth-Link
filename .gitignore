@@ -19,3 +19,9 @@ hs_err_pid*
 
 # Common working directory
 run
+
+# AI assistant files
+CLAUDE.md
+.claude/
+.ccg/
+.context/
