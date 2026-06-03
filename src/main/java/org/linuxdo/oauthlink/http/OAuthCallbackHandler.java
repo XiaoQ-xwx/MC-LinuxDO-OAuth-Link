@@ -30,9 +30,20 @@ public class OAuthCallbackHandler implements HttpHandler {
     private final OAuthBindingCallback bindingCallback;
     private final Logger logger;
 
+    /** Result of an auto-bind attempt — determines which HTML page to show the user. */
+    public enum BindResult {
+        /** Binding succeeded — account saved, events fired. */
+        SUCCESS,
+        /** Deterministic conflict — no manual code generated, show conflict page. */
+        CONFLICT,
+        /** Transient failure — manual code provided for /linkld <code>. */
+        TRANSIENT_FAILURE
+    }
+
     @FunctionalInterface
     public interface OAuthBindingCallback {
-        void bind(UUID playerId, String playerName, LinuxDoProfile profile, OAuthTokens tokens);
+        /** Attempts auto-bind. The result determines the callback page shown to the user. */
+        BindResult bind(UUID playerId, String playerName, LinuxDoProfile profile, OAuthTokens tokens);
     }
 
     public OAuthCallbackHandler(PendingOAuthRegistry registry,
@@ -80,20 +91,39 @@ public class OAuthCallbackHandler implements HttpHandler {
                         .thenApply(profile -> new TokenAndProfile(tokens, profile)))
                 .thenAccept(result -> {
                     try {
-                        // Auto-bind: no link code needed!
-                        bindingCallback.bind(playerId, playerName, result.profile, result.tokens);
-                        sendHtml(exchange, 200, buildAutoSuccessPage(result.profile.username()));
+                        BindResult bindResult = bindingCallback.bind(
+                                playerId, playerName, result.profile, result.tokens);
+                        switch (bindResult) {
+                            case SUCCESS:
+                                sendHtml(exchange, 200,
+                                        buildAutoSuccessPage(result.profile.username()));
+                                break;
+                            case CONFLICT:
+                                // Deterministic conflict — don't create a useless manual code
+                                sendHtml(exchange, 409, buildErrorPage("绑定冲突",
+                                        "该 LinuxDO 账号或你的 Minecraft 账号已绑定其他用户。"
+                                        + "<br>请检查后重试，或联系服务器管理员。"));
+                                break;
+                            case TRANSIENT_FAILURE:
+                                // Store link code so the player can retry manually
+                                String linkCode = registry.storeAuthorization(
+                                        result.profile, result.tokens);
+                                sendHtml(exchange, 200, buildManualFallbackPage(linkCode));
+                                break;
+                        }
                     } catch (Exception e) {
                         logger.log(Level.SEVERE, "自动绑定失败", e);
                         // Fallback: store link code for manual mode
-                        String linkCode = registry.storeAuthorization(result.profile, result.tokens);
+                        String linkCode = registry.storeAuthorization(
+                                result.profile, result.tokens);
                         sendHtml(exchange, 200, buildManualFallbackPage(linkCode));
                     }
                 })
                 .exceptionally(throwable -> {
                     logger.log(Level.WARNING, "OAuth 回调处理失败", throwable);
+                    String detail = extractErrorDetail(throwable);
                     sendHtml(exchange, 502, buildErrorPage("授权失败",
-                            "获取用户信息时发生错误。<br>请回到游戏重试。"));
+                            "获取用户信息时发生错误。<br>请回到游戏重试。", detail));
                     return null;
                 });
     }
@@ -161,16 +191,57 @@ public class OAuthCallbackHandler implements HttpHandler {
     }
 
     private String buildErrorPage(String title, String message) {
-        return "<!DOCTYPE html><html lang=\"zh\"><head><meta charset=\"UTF-8\">"
-                + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-                + "<title>" + escapeHtml(title) + "</title>"
-                + "<style>body{font-family:-apple-system,system-ui,sans-serif;display:flex;"
-                + "justify-content:center;align-items:center;min-height:100vh;margin:0;"
-                + "background:#f5f5f5;color:#333}.card{background:#fff;border-radius:12px;"
-                + "padding:40px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.1);max-width:400px}"
-                + ".error{color:#e53935}</style></head>"
-                + "<body><div class=\"card\"><h1 class=\"error\">❌ " + escapeHtml(title) + "</h1>"
-                + "<p>" + message + "</p></div></body></html>";
+        return buildErrorPage(title, message, null);
+    }
+
+    /**
+     * Builds an error page with optional expandable technical details
+     * for server administrators to diagnose issues.
+     */
+    private String buildErrorPage(String title, String message, String errorDetail) {
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html lang=\"zh\"><head><meta charset=\"UTF-8\">")
+                .append("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
+                .append("<title>").append(escapeHtml(title)).append("</title>")
+                .append("<style>body{font-family:-apple-system,system-ui,sans-serif;display:flex;")
+                .append("justify-content:center;align-items:center;min-height:100vh;margin:0;")
+                .append("background:#f5f5f5;color:#333}.card{background:#fff;border-radius:12px;")
+                .append("padding:40px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.1);")
+                .append("max-width:500px}.error{color:#e53935}")
+                .append("details{margin-top:16px;text-align:left}")
+                .append("summary{cursor:pointer;color:#888;font-size:13px;user-select:none}")
+                .append("summary:hover{color:#555}")
+                .append("pre{background:#fafafa;border:1px solid #e8e8e8;border-radius:8px;")
+                .append("padding:12px;margin-top:8px;font-size:12px;color:#e53935;")
+                .append("white-space:pre-wrap;word-break:break-all;")
+                .append("max-height:240px;overflow-y:auto;line-height:1.5}")
+                .append("</style></head>")
+                .append("<body><div class=\"card\"><h1 class=\"error\">❌ ")
+                .append(escapeHtml(title)).append("</h1>")
+                .append("<p>").append(message).append("</p>");
+
+        if (errorDetail != null && !errorDetail.isBlank()) {
+            html.append("<details><summary>🔍 错误详情（服务器管理员参考）</summary>")
+                    .append("<pre>").append(escapeHtml(errorDetail)).append("</pre>")
+                    .append("</details>");
+        }
+
+        html.append("</div></body></html>");
+        return html.toString();
+    }
+
+    /**
+     * Extracts a human-readable error detail from a Throwable for diagnostic display.
+     * Truncated at 600 chars to keep the page lightweight.
+     */
+    private String extractErrorDetail(Throwable throwable) {
+        if (throwable == null) return null;
+        Throwable cause = throwable.getCause();
+        String msg = (cause != null) ? cause.toString() : throwable.toString();
+        if (msg.length() > 600) {
+            msg = msg.substring(0, 600) + "...";
+        }
+        return msg;
     }
 
     private String escapeHtml(String text) {

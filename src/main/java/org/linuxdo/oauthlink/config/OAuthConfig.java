@@ -5,6 +5,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.linuxdo.oauthlink.oauth.OAuthError;
 import org.linuxdo.oauthlink.oauth.OAuthException;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Immutable validated runtime configuration loaded from config.yml.
  */
@@ -23,6 +27,7 @@ public final class OAuthConfig {
     private final int linkCodeTtlSeconds;
     private final int tokenExpirySkewSeconds;
     private final String storageFile;
+    private final Map<String, String> messages;
 
     private OAuthConfig(FileConfiguration config) {
         this.clientId = config.getString("oauth.client-id", "");
@@ -38,6 +43,18 @@ public final class OAuthConfig {
         this.linkCodeTtlSeconds = config.getInt("security.link-code-ttl-seconds", 300);
         this.tokenExpirySkewSeconds = config.getInt("security.token-expiry-skew-seconds", 60);
         this.storageFile = config.getString("storage.file", "data.yml");
+
+        // Parse customizable messages
+        Map<String, String> msgMap = new HashMap<>();
+        if (config.isConfigurationSection("messages")) {
+            for (String key : config.getConfigurationSection("messages").getKeys(false)) {
+                String value = config.getString("messages." + key);
+                if (value != null && !value.isBlank()) {
+                    msgMap.put(key, value);
+                }
+            }
+        }
+        this.messages = Collections.unmodifiableMap(msgMap);
     }
 
     /**
@@ -88,4 +105,12 @@ public final class OAuthConfig {
     public int getLinkCodeTtlSeconds() { return linkCodeTtlSeconds; }
     public int getTokenExpirySkewSeconds() { return tokenExpirySkewSeconds; }
     public String getStorageFile() { return storageFile; }
+
+    /**
+     * Returns a configured message, falling back to the provided default.
+     * Message keys are defined in config.yml under the "messages" section.
+     */
+    public String getMessage(String key, String defaultMsg) {
+        return messages.getOrDefault(key, defaultMsg);
+    }
 }

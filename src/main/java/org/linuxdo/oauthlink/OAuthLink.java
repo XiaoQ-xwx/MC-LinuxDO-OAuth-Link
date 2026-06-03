@@ -124,7 +124,7 @@ public final class OAuthLink extends JavaPlugin {
 
             // 6. Register commands
             Objects.requireNonNull(getCommand("linkld"))
-                    .setExecutor(new LinkCommand(service, logger));
+                    .setExecutor(new LinkCommand(this, service, logger));
             Objects.requireNonNull(getCommand("oauthlink"))
                     .setExecutor(new OAuthLinkCommand(this, service, logger));
 
@@ -164,5 +164,31 @@ public final class OAuthLink extends JavaPlugin {
         }
 
         logger.info("OAuthLink 已关闭");
+    }
+
+    /**
+     * Reloads configuration and propagates changes to all running components.
+     * Called by /oauthlink reload.
+     *
+     * <p>Named reloadOAuthConfig (not reloadConfig) to avoid overriding
+     * {@link org.bukkit.plugin.java.JavaPlugin#reloadConfig()}.
+     */
+    public void reloadOAuthConfig() {
+        Logger logger = getLogger();
+        try {
+            OAuthConfig newConfig = OAuthConfig.load(this);
+            if (service != null) {
+                service.reloadConfig(newConfig);
+                // reloadConfig() logs success; no double-log here
+            } else {
+                logger.info("配置已重新加载（服务未启动，仅校验通过）");
+            }
+        } catch (OAuthException e) {
+            logger.warning("配置重新加载失败: " + e.getSafeMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.log(java.util.logging.Level.WARNING, "配置重新加载时发生未预期错误", e);
+            throw new RuntimeException("配置重新加载失败: " + e.getMessage(), e);
+        }
     }
 }

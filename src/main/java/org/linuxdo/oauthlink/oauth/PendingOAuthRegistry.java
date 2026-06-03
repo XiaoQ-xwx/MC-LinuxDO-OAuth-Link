@@ -29,8 +29,8 @@ public class PendingOAuthRegistry {
     private final ConcurrentMap<String, PendingAuthorization> authorizations;
     private final OAuthCodeGenerator generator;
     private final Clock clock;
-    private final Duration stateTtl;
-    private final Duration linkCodeTtl;
+    private volatile Duration stateTtl;
+    private volatile Duration linkCodeTtl;
 
     public PendingOAuthRegistry(OAuthCodeGenerator generator, Clock clock,
                                  Duration stateTtl, Duration linkCodeTtl) {
@@ -40,6 +40,15 @@ public class PendingOAuthRegistry {
         this.clock = clock;
         this.stateTtl = stateTtl;
         this.linkCodeTtl = linkCodeTtl;
+    }
+
+    /**
+     * Updates TTL values for runtime config reload.
+     * Existing entries keep their original expiry; only new entries are affected.
+     */
+    public void updateTtl(Duration newStateTtl, Duration newLinkCodeTtl) {
+        this.stateTtl = newStateTtl;
+        this.linkCodeTtl = newLinkCodeTtl;
     }
 
     /**
@@ -77,7 +86,11 @@ public class PendingOAuthRegistry {
      */
     public String storeAuthorization(LinuxDoProfile profile, OAuthTokens tokens) {
         purgeExpired();
-        String linkCode = generator.generateLinkCode();
+        // Guard against extremely unlikely link code collision
+        String linkCode;
+        do {
+            linkCode = generator.generateLinkCode();
+        } while (authorizations.containsKey(linkCode));
         PendingAuthorization pending = new PendingAuthorization(
                 linkCode, profile, tokens,
                 Instant.now(clock).plus(linkCodeTtl));

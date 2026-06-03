@@ -4,6 +4,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
+import org.linuxdo.oauthlink.OAuthLink;
 import org.linuxdo.oauthlink.model.LinkedAccount;
 import org.linuxdo.oauthlink.oauth.OAuthException;
 import org.linuxdo.oauthlink.service.OAuthLinkService;
@@ -36,10 +37,12 @@ import java.util.logging.Logger;
  */
 public class LinkCommand implements CommandExecutor, TabCompleter {
 
+    private final OAuthLink plugin;
     private final OAuthLinkService service;
     private final Logger logger;
 
-    public LinkCommand(OAuthLinkService service, Logger logger) {
+    public LinkCommand(OAuthLink plugin, OAuthLinkService service, Logger logger) {
+        this.plugin = plugin;
         this.service = service;
         this.logger = logger;
     }
@@ -155,8 +158,13 @@ public class LinkCommand implements CommandExecutor, TabCompleter {
                 .append(ChatColor.GRAY + " 验证你的 LinuxDO 账号");
 
         player.spigot().sendMessage(builder.create());
-        player.sendMessage(ChatColor.GRAY + "授权完成后，请使用 " + ChatColor.AQUA + "/linkld <验证码>"
-                + ChatColor.GRAY + " 完成绑定");
+        player.sendMessage(ChatColor.GRAY + "授权完成后将自动绑定；若自动绑定失败，"
+                + "请使用浏览器页面上显示的 "
+                + ChatColor.AQUA + "/linkld <验证码>"
+                + ChatColor.GRAY + " 完成手动绑定");
+        player.sendMessage(ChatColor.GRAY + "或随时使用 "
+                + ChatColor.AQUA + "/linkld"
+                + ChatColor.GRAY + " 重新发起授权");
         player.sendMessage("");
         return true;
     }
@@ -168,10 +176,13 @@ public class LinkCommand implements CommandExecutor, TabCompleter {
 
         service.linkPlayer(player.getUniqueId(), player.getName(), code)
                 .thenAccept(account -> {
-                    player.sendMessage(ChatColor.GREEN + "✔ 成功绑定 LinuxDO 账号: @"
-                            + ChatColor.WHITE + account.linuxDoUsername());
-                    player.sendMessage(ChatColor.GRAY + "使用 " + ChatColor.AQUA + "/linkld"
-                            + ChatColor.GRAY + " 查看账号信息");
+                    // Must schedule on main thread — Bukkit Player API is not thread-safe
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        player.sendMessage(ChatColor.GREEN + "✔ 成功绑定 LinuxDO 账号: @"
+                                + ChatColor.WHITE + account.linuxDoUsername());
+                        player.sendMessage(ChatColor.GRAY + "使用 " + ChatColor.AQUA + "/linkld"
+                                + ChatColor.GRAY + " 查看账号信息");
+                    });
                 })
                 .exceptionally(throwable -> {
                     String message = ChatColor.RED + "❌ 绑定失败: ";
@@ -184,13 +195,8 @@ public class LinkCommand implements CommandExecutor, TabCompleter {
                         logger.log(Level.WARNING, "绑定失败", throwable);
                     }
                     String finalMessage = message;
-                    if (Bukkit.isPrimaryThread()) {
-                        player.sendMessage(finalMessage);
-                    } else {
-                        Bukkit.getScheduler().runTask(
-                                Bukkit.getPluginManager().getPlugin("OAuthLink"),
-                                () -> player.sendMessage(finalMessage));
-                    }
+                    Bukkit.getScheduler().runTask(plugin,
+                            () -> player.sendMessage(finalMessage));
                     return null;
                 });
         return true;
@@ -248,20 +254,17 @@ public class LinkCommand implements CommandExecutor, TabCompleter {
         service.getLinkedAccount(player.getUniqueId()).ifPresent(account -> {
             service.unlink(player.getUniqueId())
                     .thenRun(() -> {
-                        Bukkit.getScheduler().runTask(
-                                Bukkit.getPluginManager().getPlugin("OAuthLink"),
-                                () -> {
-                                    player.sendMessage(ChatColor.GREEN + "✔ 已解除与 LinuxDO 账号 @"
-                                            + account.linuxDoUsername() + " 的绑定");
-                                    player.sendMessage(ChatColor.GRAY + "你可以随时使用 "
-                                            + ChatColor.AQUA + "/linkld" + ChatColor.GRAY
-                                            + " 重新绑定");
-                                });
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            player.sendMessage(ChatColor.GREEN + "✔ 已解除与 LinuxDO 账号 @"
+                                    + account.linuxDoUsername() + " 的绑定");
+                            player.sendMessage(ChatColor.GRAY + "你可以随时使用 "
+                                    + ChatColor.AQUA + "/linkld" + ChatColor.GRAY
+                                    + " 重新绑定");
+                        });
                     })
                     .exceptionally(throwable -> {
                         logger.log(Level.WARNING, "解除绑定时发生错误", throwable);
-                        Bukkit.getScheduler().runTask(
-                                Bukkit.getPluginManager().getPlugin("OAuthLink"),
+                        Bukkit.getScheduler().runTask(plugin,
                                 () -> player.sendMessage(ChatColor.RED + "❌ 解除绑定失败，请稍后重试"));
                         return null;
                     });

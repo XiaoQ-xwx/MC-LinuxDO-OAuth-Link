@@ -10,12 +10,14 @@ Minecraft (Spigot/Paper) 插件 — 将 [LinuxDO](https://linux.do/) 社区 OAut
 
 - **OAuth2 授权码流程** — 标准 authorization_code 流程，安全绑定 LinuxDO 账号
 - **零依赖 Web 服务** — 内建 HTTP 回调服务器（`com.sun.net.httpserver`），无需额外 Web 服务
-- **自动绑定 + 手动降级** — 浏览器授权成功后自动完成绑定，验证码手动输入作为备用路径
+- **自动绑定 + 手动降级** — 浏览器授权成功后自动完成绑定，验证码手动输入作为备用路径；冲突时展示明确错误页面
+- **并发安全** — 双向索引原子写入 + check-then-save 锁保护，确保多人同时绑定不产生数据错乱
 - **账号信息面板** — `/linkld` 查看已绑定账号的信任等级、社区分数、论坛主页
 - **Bukkit 事件系统** — 绑定成功/失败/解绑分别触发事件，下游插件可监听
 - **静态 API 门面** — `OAuthLinkAPI` 一行调用查询绑定状态，无需注入依赖
 - **安全的 Token 管理** — Access Token 永不通过公共 API 暴露，仅插件内部使用
 - **YAML 持久化** — 使用 Minecraft 原生 `YamlConfiguration`，人类可读、易于排查
+- **可配置聊天消息** — `config.yml` 中自定义玩家提示文本，支持 `&` 颜色代码，`/oauthlink reload` 生效
 
 ## 🚀 快速开始
 
@@ -92,6 +94,18 @@ security:
 
 storage:
   file: "data.yml"                                        # 绑定数据存储文件名
+
+# 聊天消息（支持 & 颜色代码，修改后 /oauthlink reload 生效）
+messages:
+  oauth-start-title: "⚡ &lLinux.DO 账号绑定&r &7──────────────────"
+  oauth-start-click-hint: "&7点击 "
+  oauth-start-click-button: "&b&l[此处]"
+  oauth-start-click-suffix: "&7 验证你的 LinuxDO 账号"
+  oauth-start-auto-hint: "&7授权完成后将自动绑定；若自动绑定失败，请使用浏览器页面上显示的 &b/linkld <验证码>&7 完成手动绑定"
+  oauth-start-retry-hint: "&7或随时使用 &b/linkld&7 重新发起授权"
+  auto-bind-failed-title: "&c❌ 自动绑定失败"
+  auto-bind-failed-code-hint: "&7请在浏览器页面上获取验证码，使用 &b/linkld <验证码>&7 完成手动绑定"
+  auto-bind-failed-retry-hint: "&7或使用 &b/linkld&7 重新发起授权"
 ```
 
 ### 安全注意事项
@@ -100,6 +114,8 @@ storage:
 - **回调端口** 建议使用防火墙限制，仅允许 `127.0.0.1` 访问
 - **验证码 TTL** 不宜过大（推荐 300 秒），降低验证码被猜测的风险
 - **Token 过期偏差** (`token-expiry-skew-seconds`) 用于容忍服务器时钟不同步，建议保持默认 60 秒
+- **并发绑定保护**：插件内部使用锁机制保证多人同时绑定时的数据一致性；同一 LinuxDO 账号不可绑定多个 Minecraft 玩家
+- **配置热加载原子性**：`/oauthlink reload` 在回调服务器重启失败时会自动回滚所有配置变更，避免半生效状态
 
 ## 📦 下游插件开发
 
@@ -175,6 +191,13 @@ gradlew.bat build
 ```
 
 测试覆盖：配置校验、数据模型、状态注册表、存储层、OAuth HTTP 客户端、业务编排层。
+
+## 📝 变更记录
+
+| 日期 | 版本 | 变更 |
+| :--- | :--- | :--- |
+| 2026-06-03 | -- | 🔒 并发安全修复：YAML 仓库双向索引原子写入、绑定 check-then-save 锁保护、LinkCommand 主线程调度；📄 OAuth 失败页面可展开错误详情；♻️ 配置热加载失败自动回滚；🎨 可配置聊天消息接入；🛡️ 验证码碰撞防护 |
+| 2026-06-01 | 1.0-SNAPSHOT | 初始版本：OAuth2 授权码流程、内建 HTTP 回调服务器、自动绑定/手动降级、双向索引持久化、Bukkit API |
 
 ## 📐 架构
 

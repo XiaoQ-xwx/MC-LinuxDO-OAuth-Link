@@ -1,5 +1,6 @@
 package org.linuxdo.oauthlink.command;
 
+import org.linuxdo.oauthlink.OAuthLink;
 import org.linuxdo.oauthlink.model.LinkedAccount;
 import org.linuxdo.oauthlink.service.OAuthLinkService;
 import org.bukkit.Bukkit;
@@ -9,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +52,7 @@ class LinkCommandTest {
     @Mock private BukkitScheduler scheduler;
     @Mock private PluginManager pluginManager;
     @Mock private Server server;
-    @Mock private JavaPlugin plugin;
+    @Mock private OAuthLink plugin;
 
     private Logger logger;
     private LinkCommand linkCommand;
@@ -61,7 +61,7 @@ class LinkCommandTest {
     @BeforeEach
     void setUp() {
         logger = Logger.getLogger("LinkCommandTest");
-        linkCommand = new LinkCommand(service, logger);
+        linkCommand = new LinkCommand(plugin, service, logger);
 
         // Player identity
         lenient().when(player.getUniqueId()).thenReturn(PLAYER_UUID);
@@ -85,8 +85,6 @@ class LinkCommandTest {
             return null;
         }).when(scheduler).runTask(any(), any(Runnable.class));
 
-        // For getPlugin
-        lenient().when(pluginManager.getPlugin("OAuthLink")).thenReturn(plugin);
     }
 
     @AfterEach

@@ -30,6 +30,8 @@ public class YamlLinkRepository implements LinkRepository {
 
     private final ConcurrentHashMap<UUID, LinkedAccount> byPlayer = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, UUID> byLinuxDoId = new ConcurrentHashMap<>();
+    /** Guards compound updates across both maps to keep dual-index writes atomic. */
+    private final Object indexLock = new Object();
 
     public YamlLinkRepository(Path dataFile, ExecutorService ioExecutor, Logger logger) {
         this.dataFile = dataFile;
@@ -99,16 +101,25 @@ public class YamlLinkRepository implements LinkRepository {
 
     @Override
     public CompletableFuture<Void> save(LinkedAccount account) {
-        byPlayer.put(account.playerId(), account);
-        byLinuxDoId.put(account.linuxDoId(), account.playerId());
+        synchronized (indexLock) {
+            // Clean up stale reverse index when re-binding to a different LinuxDO account
+            LinkedAccount old = byPlayer.get(account.playerId());
+            if (old != null && !old.linuxDoId().equals(account.linuxDoId())) {
+                byLinuxDoId.remove(old.linuxDoId());
+            }
+            byPlayer.put(account.playerId(), account);
+            byLinuxDoId.put(account.linuxDoId(), account.playerId());
+        }
         return writeSnapshot();
     }
 
     @Override
     public CompletableFuture<Void> delete(UUID playerId) {
-        LinkedAccount removed = byPlayer.remove(playerId);
-        if (removed != null) {
-            byLinuxDoId.remove(removed.linuxDoId());
+        synchronized (indexLock) {
+            LinkedAccount removed = byPlayer.remove(playerId);
+            if (removed != null) {
+                byLinuxDoId.remove(removed.linuxDoId());
+            }
         }
         return writeSnapshot();
     }

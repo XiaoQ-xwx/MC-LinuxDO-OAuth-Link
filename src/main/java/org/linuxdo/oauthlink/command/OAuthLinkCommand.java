@@ -1,12 +1,11 @@
 package org.linuxdo.oauthlink.command;
 
-import org.linuxdo.oauthlink.config.OAuthConfig;
+import org.linuxdo.oauthlink.OAuthLink;
 import org.linuxdo.oauthlink.service.OAuthLinkService;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.logging.Level;
@@ -17,11 +16,11 @@ import java.util.logging.Logger;
  */
 public class OAuthLinkCommand implements CommandExecutor {
 
-    private final JavaPlugin plugin;
+    private final OAuthLink plugin;
     private final OAuthLinkService service;
     private final Logger logger;
 
-    public OAuthLinkCommand(JavaPlugin plugin, OAuthLinkService service, Logger logger) {
+    public OAuthLinkCommand(OAuthLink plugin, OAuthLinkService service, Logger logger) {
         this.plugin = plugin;
         this.service = service;
         this.logger = logger;
@@ -50,7 +49,7 @@ public class OAuthLinkCommand implements CommandExecutor {
         }
 
         try {
-            OAuthConfig config = OAuthConfig.load(plugin);
+            plugin.reloadOAuthConfig();
             sender.sendMessage(ChatColor.GREEN + "✔ 配置已重新加载");
             logger.info("配置已由 " + sender.getName() + " 重新加载");
         } catch (Exception e) {

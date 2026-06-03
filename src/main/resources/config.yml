@@ -46,3 +46,18 @@ security:
 storage:
   # 绑定数据存储文件名（位于 plugins/OAuthLink/ 目录下）
   file: "data.yml"
+
+# ── 聊天消息（支持颜色代码 &） ──────────────────────────────────────────────
+# 修改后使用 /oauthlink reload 即可生效，无需重启服务器
+messages:
+  # 发起授权时 — 引导玩家点击链接
+  oauth-start-title: "⚡ &lLinux.DO 账号绑定&r &7──────────────────"
+  oauth-start-click-hint: "&7点击 "
+  oauth-start-click-button: "&b&l[此处]"
+  oauth-start-click-suffix: "&7 验证你的 LinuxDO 账号"
+  oauth-start-auto-hint: "&7授权完成后将自动绑定；若自动绑定失败，请使用浏览器页面上显示的 &b/linkld <验证码>&7 完成手动绑定"
+  oauth-start-retry-hint: "&7或随时使用 &b/linkld&7 重新发起授权"
+  # 自动绑定失败时 — 通知玩家去网页取验证码
+  auto-bind-failed-title: "&c❌ 自动绑定失败"
+  auto-bind-failed-code-hint: "&7请在浏览器页面上获取验证码，使用 &b/linkld <验证码>&7 完成手动绑定"
+  auto-bind-failed-retry-hint: "&7或使用 &b/linkld&7 重新发起授权"

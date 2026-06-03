@@ -30,7 +30,7 @@ public class LinuxDoOAuthClient {
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
-    private final OAuthConfig config;
+    private volatile OAuthConfig config;
     private final Logger logger;
 
     public LinuxDoOAuthClient(HttpClient httpClient, ObjectMapper objectMapper,
@@ -39,6 +39,14 @@ public class LinuxDoOAuthClient {
         this.objectMapper = objectMapper;
         this.config = config;
         this.logger = logger;
+    }
+
+    /**
+     * Updates the configuration reference for runtime reload.
+     * Thread-safe via volatile.
+     */
+    public void updateConfig(OAuthConfig newConfig) {
+        this.config = newConfig;
     }
 
     /**
@@ -55,16 +63,18 @@ public class LinuxDoOAuthClient {
 
     /**
      * Exchanges an authorization code for OAuth tokens.
+     * Captures a local config snapshot to avoid inconsistent multi-field reads during reload.
      */
     public CompletableFuture<OAuthTokens> exchangeCode(String code) {
+        OAuthConfig cfg = this.config; // atomic snapshot
         String body = "grant_type=authorization_code"
                 + "&code=" + urlEncode(code)
-                + "&redirect_uri=" + urlEncode(config.getRedirectUri())
-                + "&client_id=" + urlEncode(config.getClientId())
-                + "&client_secret=" + urlEncode(config.getClientSecret());
+                + "&redirect_uri=" + urlEncode(cfg.getRedirectUri())
+                + "&client_id=" + urlEncode(cfg.getClientId())
+                + "&client_secret=" + urlEncode(cfg.getClientSecret());
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(config.getTokenUrl()))
+                .uri(URI.create(cfg.getTokenUrl()))
                 .timeout(REQUEST_TIMEOUT)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
@@ -95,10 +105,12 @@ public class LinuxDoOAuthClient {
 
     /**
      * Fetches the user profile from LinuxDO using an access token.
+     * Captures a local config snapshot to avoid inconsistent multi-field reads during reload.
      */
     public CompletableFuture<LinuxDoProfile> fetchProfile(String accessToken) {
+        OAuthConfig cfg = this.config; // atomic snapshot
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(config.getUserInfoUrl()))
+                .uri(URI.create(cfg.getUserInfoUrl()))
                 .timeout(REQUEST_TIMEOUT)
                 .header("Authorization", "Bearer " + accessToken)
                 .header("Accept", "application/json")

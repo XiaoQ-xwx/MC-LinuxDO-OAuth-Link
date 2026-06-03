@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class CallbackHttpServer {
 
-    private final OAuthConfig config;
+    private volatile OAuthConfig config;
     private final OAuthCallbackHandler handler;
     private final Logger logger;
     private HttpServer server;
@@ -66,6 +66,15 @@ public class CallbackHttpServer {
         if (httpExecutor != null) {
             httpExecutor.shutdownNow();
         }
+    }
+
+    /**
+     * Restarts the HTTP server with new configuration.
+     * Used by /oauthlink reload to apply callback host/port/path changes.
+     */
+    public void restart(OAuthConfig newConfig) throws IOException {
+        this.config = newConfig;
+        start();
     }
 
     /**
