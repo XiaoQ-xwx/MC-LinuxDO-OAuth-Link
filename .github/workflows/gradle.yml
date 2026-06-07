@@ -6,12 +6,15 @@
 
 name: Java CI with Gradle
 
+# 临时关闭自动触发，仅保留手动 dispatch
+# on:
+#   push:
+#     branches: [ "master" ]
+#     tags: [ "v*" ]
+#   pull_request:
+#     branches: [ "master" ]
 on:
-  push:
-    branches: [ "master" ]
-    tags: [ "v*" ]
-  pull_request:
-    branches: [ "master" ]
+  workflow_dispatch:
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g -XX:+UseParallelGC"
