@@ -57,21 +57,26 @@ public final class OAuthLink extends JavaPlugin {
                 return t;
             });
 
-            // Ensure JDK negotiates TLS 1.2+ (Cloudflare-hosted servers often reject
-            // JDK's default TLS 1.3 ClientHello due to implementation quirks).
-            // Must be set BEFORE creating any HttpClient — the JDK reads it once.
-            System.setProperty("jdk.tls.client.protocols", "TLSv1.2,TLSv1.3");
+            // JDK 21 TLS 1.3 ClientHello triggers Cloudflare edge to terminate
+            // the handshake (Remote host terminated the handshake). Force TLS 1.2
+            // only to avoid JDK 21 ↔ Cloudflare TLS 1.3 incompatibility.
+            // Must be set BEFORE creating any HttpClient — the JDK reads it once
+            // and caches the default SSLContext on first use.
+            System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
+            System.setProperty("https.protocols", "TLSv1.2");
 
             SSLContext sslContext;
             try {
-                sslContext = SSLContext.getInstance("TLS");
+                sslContext = SSLContext.getInstance("TLSv1.2");
                 sslContext.init(null, null, null);
             } catch (NoSuchAlgorithmException e) {
+                // Fallback to default (may still fail if default is TLS 1.3)
                 sslContext = SSLContext.getDefault();
-                logger.warning("TLS SSLContext 不可用，使用默认: " + e.getMessage());
+                logger.warning("TLSv1.2 SSLContext 不可用，回退到默认: " + e.getMessage());
             }
 
-            // SSL handshake may need to chase intermediate CAs, so increase timeout
+            // Cloudflare-hosted servers may need extra handshake time for
+            // OCSP stapling and intermediate CA chain resolution.
             Duration handshakeTimeout = Duration.ofSeconds(30);
 
             this.httpClient = HttpClient.newBuilder()
