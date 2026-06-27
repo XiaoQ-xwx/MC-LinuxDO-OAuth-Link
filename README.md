@@ -1,10 +1,21 @@
 # MC-LinuxDO-OAuth-Link
 
 [![Java 17](https://img.shields.io/badge/Java-17-blue)](https://adoptium.net/)
-[![Spigot 1.20](https://img.shields.io/badge/Spigot-1.20.x-orange)](https://www.spigotmc.org/)
+[![Spigot 1.16.5+](https://img.shields.io/badge/Spigot-1.16.5%2B-orange)](https://www.spigotmc.org/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 Minecraft (Spigot/Paper) 插件 — 将 [LinuxDO](https://linux.do/) 社区 OAuth 认证引入你的服务器。玩家通过浏览器完成 LinuxDO 授权，在游戏内使用 `/linkld` 命令绑定账号，下游插件可通过 Bukkit Event 或静态 API 查询绑定状态。
+
+## 📦 版本兼容性
+
+| 项 | 说明 |
+| :--- | :--- |
+| **支持的服务器版本** | Spigot / Paper **1.16.5 ~ 1.21.x**（单一 jar 全版本兼容） |
+| **Java 运行环境** | **JDK 17+** 必需（含 1.16.5 服务器 —— 须运行在 Java 17+ JVM 上） |
+| **编译基线** | `spigot-api:1.16.5` —— 用最低目标版本 API 编译，编译期保证不误用 1.17+ 新 API |
+| **`api-version`** | `plugin.yml` 声明 `1.16`，在高于 1.16 的服务器上加载时可能显示 "outdated API" 软警告，属正常现象，不影响运行 |
+
+> ⚠️ **不支持 1.7.10 / 原生 Java 8 环境**：本插件使用 `java.net.http.HttpClient`、`record`、`CompletableFuture` 等 Java 17 现代 API，无法在 Java 8 运行时加载。1.16.5 服主请确保服务端使用 Java 17+ 启动。
 
 ## 注意
 
@@ -176,7 +187,7 @@ public class MyListener implements Listener {
 
 ## 🛠️ 构建
 
-**环境要求：** JDK 17+
+**环境要求：** JDK 17+，Spigot/Paper 1.16.5 ~ 1.21.x
 
 ```bash
 # Windows

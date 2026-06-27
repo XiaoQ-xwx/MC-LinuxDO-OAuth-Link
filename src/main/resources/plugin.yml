@@ -3,7 +3,9 @@ description: Minecraft LinuxDO OAuth Account Link
 version: '${version}'
 
 main: org.linuxdo.oauthlink.OAuthLink
-api-version: '1.20'
+# 声明最低支持的 API 版本。设为 1.16 表示插件兼容 1.16.5 ~ 1.21.x；
+# 在高于 1.16 的服务器上加载时，Spigot/Paper 可能输出 "outdated API" 软警告，但不阻断加载。
+api-version: '1.16'
 
 authors: [ XiaoQ ]
 website: https://linux.do/u/xiao_q/summary
